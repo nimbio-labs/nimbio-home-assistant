@@ -1,0 +1,74 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Nimbio",
+        "description": "Paste a Nimbio API key.\n\n- **Members**: create an account key at [api.nimbio.com/manage](https://api.nimbio.com/manage) — gives you open buttons for your keys.\n- **Community managers**: create a community key in the [admin portal](https://community.nimbio.com) under API Access — adds live gate status and hold-open control.\n\nA `nimbio_test_...` key exercises everything without moving a gate.",
+        "data": {
+          "api_key": "API key",
+          "base_url": "Base URL (leave empty for api.nimbio.com)"
+        }
+      },
+      "webhook_mode": {
+        "title": "Live updates",
+        "description": "How should Nimbio push gate status to Home Assistant?\n\n- **Cloudhook** (recommended): uses your Nabu Casa cloud connection.\n- **External URL**: your Home Assistant is already reachable over public https — enter that base URL.\n- **Polling**: no push; state refreshes on an interval (status reads don't count against your monthly quota).",
+        "data": {
+          "webhook_mode": "Update mode",
+          "external_url": "Public https base URL (external mode only)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid API key",
+      "cannot_connect": "Could not reach the Nimbio API",
+      "https_required": "The external URL must start with https://"
+    },
+    "abort": {
+      "already_configured": "This API key is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nimbio options",
+        "data": {
+          "poll_interval": "Polling interval (seconds, polling mode only)"
+        }
+      }
+    }
+  },
+  "selector": {
+    "webhook_mode": {
+      "options": {
+        "cloudhook": "Nabu Casa cloudhook (recommended)",
+        "external": "My Home Assistant has a public https URL",
+        "polling": "Polling only (no push)"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "manual_hold_open": { "name": "Manual hold open" }
+    },
+    "binary_sensor": {
+      "held_open": { "name": "Held open" },
+      "box_online": { "name": "Box online" },
+      "malfunction": { "name": "Malfunction" }
+    },
+    "sensor": {
+      "quota_used": { "name": "Monthly API calls used" },
+      "quota_limit": { "name": "Monthly API call quota" }
+    }
+  },
+  "services": {
+    "hold_open_for": {
+      "name": "Hold open for a duration",
+      "description": "Keep a gate held open for a set duration (creates a one-time hold-open window starting now).",
+      "fields": {
+        "latch_id": { "name": "Latch ID", "description": "The Nimbio latch to hold open (see the latch_id attribute on the gate entity)." },
+        "duration": { "name": "Duration", "description": "How long to hold the gate open." },
+        "entry_id": { "name": "Config entry", "description": "Optional: restrict to one Nimbio config entry." }
+      }
+    }
+  }
+}

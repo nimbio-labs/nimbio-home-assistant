@@ -1,0 +1,17 @@
+hold_open_for:
+  fields:
+    latch_id:
+      required: true
+      example: "1c9f4c2e-…"
+      selector:
+        text:
+    duration:
+      required: true
+      example: "01:00:00"
+      selector:
+        duration:
+    entry_id:
+      required: false
+      selector:
+        config_entry:
+          integration: nimbio
