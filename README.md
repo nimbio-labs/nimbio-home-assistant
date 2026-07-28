@@ -77,3 +77,9 @@ pytest
 
 Issues and PRs welcome at
 [nimbio-labs/nimbio-home-assistant](https://github.com/nimbio-labs/nimbio-home-assistant).
+
+---
+
+**About Nimbio** — [Nimbio](https://nimbio.com) is cellular gate and door access for gated
+communities, apartment buildings, and commercial properties. Developer docs and integration guides:
+[nimbio.com/developers](https://nimbio.com/developers/).
