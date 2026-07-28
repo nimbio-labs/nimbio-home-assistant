@@ -21,9 +21,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
     coordinator = runtime.coordinator
     if coordinator.data is None or not coordinator.data.hold_opens_available:
         return
+    # Only latches the hold-opens payload actually covers: the backend skips
+    # latches without a timezone, and a switch for one of those would accept
+    # toggles that never physically act.
     async_add_entities(
         NimbioManualHoldOpenSwitch(coordinator, latch_id)
-        for latch_id in coordinator.data.latches
+        for latch_id, latch in coordinator.data.latches.items()
+        if latch.hold_open_capable
     )
 
 

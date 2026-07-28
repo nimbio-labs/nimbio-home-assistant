@@ -21,10 +21,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
     if coordinator.data is None or coordinator.key_type != "community":
         return
     entities: list[BinarySensorEntity] = []
-    for latch_id in coordinator.data.latches:
+    for latch_id, latch in coordinator.data.latches.items():
         entities.append(NimbioConnectivitySensor(coordinator, latch_id))
         entities.append(NimbioProblemSensor(coordinator, latch_id))
-        if coordinator.data.hold_opens_available:
+        # Held-open only where the hold-opens payload covers the latch
+        # (the backend skips latches without a timezone).
+        if coordinator.data.hold_opens_available and latch.hold_open_capable:
             entities.append(NimbioHeldOpenSensor(coordinator, latch_id))
     async_add_entities(entities)
 

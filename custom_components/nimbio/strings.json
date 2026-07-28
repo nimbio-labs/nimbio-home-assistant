@@ -9,6 +9,13 @@
           "base_url": "Base URL (leave empty for api.nimbio.com)"
         }
       },
+      "reauth_confirm": {
+        "title": "Reconnect to Nimbio",
+        "description": "Your Nimbio API key was rejected (revoked or rotated). Paste a new key of the same type to reconnect.",
+        "data": {
+          "api_key": "API key"
+        }
+      },
       "webhook_mode": {
         "title": "Live updates",
         "description": "How should Nimbio push gate status to Home Assistant?\n\n- **Cloudhook** (recommended): uses your Nabu Casa cloud connection.\n- **External URL**: your Home Assistant is already reachable over public https — enter that base URL.\n- **Polling**: no push; state refreshes on an interval (status reads don't count against your monthly quota).",
@@ -21,10 +28,12 @@
     "error": {
       "invalid_auth": "Invalid API key",
       "cannot_connect": "Could not reach the Nimbio API",
-      "https_required": "The external URL must start with https://"
+      "https_required": "The external URL must start with https://",
+      "key_type_mismatch": "The new key is a different type (account vs community) than the one being replaced"
     },
     "abort": {
-      "already_configured": "This API key is already configured"
+      "already_configured": "This API key is already configured",
+      "reauth_successful": "Reconnected with the new API key"
     }
   },
   "options": {

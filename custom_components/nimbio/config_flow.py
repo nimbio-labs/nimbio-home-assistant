@@ -154,6 +154,42 @@ class NimbioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         suffix = " (test)" if self._key_info.get("mode") == "test" else ""
         return self.async_create_entry(title=f"{label}{suffix}", data=self._data)
 
+    # -- reauth (revoked / rotated API key) --------------------------------
+
+    async def async_step_reauth(self, entry_data: dict[str, Any]):
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self,
+                                        user_input: dict[str, Any] | None = None):
+        errors: dict[str, str] = {}
+        entry = self._get_reauth_entry()
+        if user_input is not None:
+            api_key = user_input[CONF_API_KEY].strip()
+            try:
+                info = await _validate_key(
+                    self.hass, api_key, entry.data.get(CONF_BASE_URL))
+            except Exception as err:  # noqa: BLE001 — map to a form error
+                _LOGGER.debug("Reauth validation failed: %s", err)
+                errors["base"] = "invalid_auth" if "401" in str(err) or \
+                    "Invalid API key" in str(err) else "cannot_connect"
+            else:
+                # The replacement key must reach the same surface: same key
+                # type (and for community keys, implicitly the same community
+                # is enforced server-side by the new key itself).
+                if info["type"] != entry.data.get(CONF_KEY_TYPE):
+                    errors["base"] = "key_type_mismatch"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data={**entry.data, CONF_API_KEY: api_key,
+                              CONF_CAPABILITIES: info["capabilities"]},
+                    )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            errors=errors,
+        )
+
     @staticmethod
     def async_get_options_flow(config_entry):
         return NimbioOptionsFlow()

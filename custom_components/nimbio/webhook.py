@@ -36,12 +36,38 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _register_receiver(hass: HomeAssistant, entry: ConfigEntry,
+                       ha_webhook_id: str) -> None:
+    """Register the HA-side receiver, tolerating a leftover registration
+    from a failed setup attempt (ConfigEntryNotReady retries re-enter here,
+    and ha_webhook.async_register raises on a duplicate id)."""
+    try:
+        ha_webhook.async_register(
+            hass, DOMAIN, f"Nimbio ({entry.title})", ha_webhook_id,
+            _make_handler(entry),
+        )
+    except ValueError:
+        # Already registered (setup retry): re-point it at a fresh handler
+        # bound to the current entry object.
+        ha_webhook.async_unregister(hass, ha_webhook_id)
+        ha_webhook.async_register(
+            hass, DOMAIN, f"Nimbio ({entry.title})", ha_webhook_id,
+            _make_handler(entry),
+        )
+
+
 async def async_ensure_webhook(hass: HomeAssistant, entry: ConfigEntry,
-                               client) -> None:
-    """Register the HA receiver and (once) the server-side webhook."""
+                               client) -> str:
+    """Register the HA receiver and (once) the server-side webhook.
+
+    Returns the EFFECTIVE update mode: normally the configured one, but
+    demoted to polling (persisted on the entry) when the server-side
+    registration cannot produce a secret — e.g. a test-mode key, whose
+    writes are simulated and return none.
+    """
     mode = entry.data.get(CONF_WEBHOOK_MODE, WEBHOOK_MODE_POLLING)
     if mode == WEBHOOK_MODE_POLLING:
-        return
+        return mode
 
     updates: dict[str, Any] = {}
     ha_webhook_id = entry.data.get(CONF_HA_WEBHOOK_ID)
@@ -49,11 +75,7 @@ async def async_ensure_webhook(hass: HomeAssistant, entry: ConfigEntry,
         ha_webhook_id = _secrets.token_hex(16)
         updates[CONF_HA_WEBHOOK_ID] = ha_webhook_id
 
-    # Local receiver (idempotent per load).
-    ha_webhook.async_register(
-        hass, DOMAIN, f"Nimbio ({entry.title})", ha_webhook_id,
-        _make_handler(entry),
-    )
+    _register_receiver(hass, entry, ha_webhook_id)
 
     # Public URL for the receiver.
     if mode == WEBHOOK_MODE_CLOUDHOOK:
@@ -71,15 +93,23 @@ async def async_ensure_webhook(hass: HomeAssistant, entry: ConfigEntry,
         created = await client.community.create_webhook(
             url, WEBHOOK_EVENTS, description=f"Home Assistant ({entry.title})")
         if created.webhook is None or not created.webhook.secret:
-            _LOGGER.error("Nimbio webhook registration returned no secret "
-                          "(test-mode key?); falling back to polling")
-        else:
-            updates[CONF_NIMBIO_WEBHOOK_ID] = created.webhook.webhook_id
-            updates[CONF_NIMBIO_WEBHOOK_SECRET] = created.webhook.secret
+            # Really fall back: persist polling mode so the coordinator uses
+            # the fast poll interval and deliveries can't dangle unverified.
+            _LOGGER.warning(
+                "Nimbio webhook registration returned no secret (test-mode "
+                "key?); switching this entry to polling mode")
+            ha_webhook.async_unregister(hass, ha_webhook_id)
+            updates[CONF_WEBHOOK_MODE] = WEBHOOK_MODE_POLLING
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, **updates})
+            return WEBHOOK_MODE_POLLING
+        updates[CONF_NIMBIO_WEBHOOK_ID] = created.webhook.webhook_id
+        updates[CONF_NIMBIO_WEBHOOK_SECRET] = created.webhook.secret
 
     if updates:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, **updates})
+    return mode
 
 
 def async_unregister_receiver(hass: HomeAssistant, entry: ConfigEntry) -> None:
