@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to Nimbio",
-        "description": "Paste a Nimbio API key.\n\n- **Members**: create an account key at [api.nimbio.com/manage](https://api.nimbio.com/manage) — gives you open buttons for your keys.\n- **Community managers**: create a community key in the [admin portal](https://community.nimbio.com) under API Access — adds live gate status and hold-open control.\n\nA `nimbio_test_...` key exercises everything without moving a gate.",
+        "description": "Paste a Nimbio API key.\n\n- **Members**: create an account key at {manage_url} — gives you open buttons for your keys.\n- **Community managers**: create a community key in the admin portal ({admin_url}) under API Access — adds live gate status and hold-open control.\n\nA `nimbio_test_...` key exercises everything without moving a gate.",
         "data": {
           "api_key": "API key",
           "base_url": "Base URL (leave empty for api.nimbio.com)"

@@ -115,6 +115,10 @@ class NimbioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_BASE_URL): str,
             }),
             errors=errors,
+            description_placeholders={
+                "manage_url": "https://api.nimbio.com/manage",
+                "admin_url": "https://community.nimbio.com",
+            },
         )
 
     async def async_step_webhook_mode(self, user_input: dict[str, Any] | None = None):
