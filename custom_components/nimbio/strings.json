@@ -56,6 +56,9 @@
     }
   },
   "entity": {
+    "button": {
+      "open_gate": { "name": "Open" }
+    },
     "switch": {
       "manual_hold_open": { "name": "Manual hold open" }
     },

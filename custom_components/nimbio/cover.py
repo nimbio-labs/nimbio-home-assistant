@@ -40,6 +40,11 @@ class NimbioGateCover(NimbioLatchEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.GATE
     _attr_supported_features = CoverEntityFeature.OPEN
     _attr_name = None  # entity carries the device name
+    # Never grey out the open control: the frontend disables a cover's open
+    # button once the state reads open, but gate status arrives with sensing/
+    # webhook lag and gates auto-close on their own — a member must always be
+    # able to fire an open.
+    _attr_assumed_state = True
 
     def __init__(self, coordinator, latch_id: str) -> None:
         super().__init__(coordinator, latch_id)

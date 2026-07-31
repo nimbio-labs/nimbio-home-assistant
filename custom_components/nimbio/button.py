@@ -1,7 +1,10 @@
 """Open buttons.
 
 Two sources:
-- Community keys: latches with no sensing configured (no state to render).
+- Community keys: EVERY latch gets one — for sensing-less latches it is the
+  primary (and only) control; for latches that also render as a cover/lock it
+  is an always-pressable "Open", because the frontend disables a cover's open
+  arrow while the state reads open and gate status can lag.
 - Account (member) keys: one button per (key, latch) — the member surface has
   no status feed, so buttons are the whole experience.
 """
@@ -29,9 +32,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
     entities: list[ButtonEntity] = []
     if coordinator.key_type == "community":
         entities += [
-            NimbioCommunityOpenButton(coordinator, latch_id)
+            NimbioCommunityOpenButton(
+                coordinator, latch_id,
+                primary=classify_latch(latch.possible_statuses)
+                == LATCH_CLASS_BUTTON)
             for latch_id, latch in coordinator.data.latches.items()
-            if classify_latch(latch.possible_statuses) == LATCH_CLASS_BUTTON
         ]
     else:
         for key in coordinator.data.account_keys:
@@ -45,13 +50,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
 
 
 class NimbioCommunityOpenButton(NimbioLatchEntity, ButtonEntity):
-    """Open a community latch that has no sensed state."""
+    """Open a community latch — always pressable regardless of gate state."""
 
-    _attr_name = None
-
-    def __init__(self, coordinator, latch_id: str) -> None:
+    def __init__(self, coordinator, latch_id: str, primary: bool = True) -> None:
         super().__init__(coordinator, latch_id)
         self._attr_unique_id = f"{latch_id}_open"
+        if primary:
+            # Sole control for this latch: carry the device name.
+            self._attr_name = None
+        else:
+            # The latch also has a cover/lock entity carrying the device
+            # name; this one is named "Open".
+            self._attr_translation_key = "open_gate"
 
     async def async_press(self) -> None:
         await self.coordinator.client.community.open(self._latch_id)

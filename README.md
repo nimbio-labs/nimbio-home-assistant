@@ -9,7 +9,7 @@ Open your Nimbio gates, see live gate status, and control hold opens from
 | Your key | Experience |
 |---|---|
 | **Member key** (create at [api.nimbio.com/manage](https://api.nimbio.com/manage)) | An **open button** for every latch on every key you hold. |
-| **Community manager key** (admin portal → API Access) | Live **gate entities** (cover or lock, following each latch's configured status vocabulary), **manual hold-open switches**, a **held-open sensor**, box **connectivity/malfunction** diagnostics, a `nimbio.hold_open_for` service for timed hold opens, and API-usage sensors. |
+| **Community manager key** (admin portal → API Access) | Live **gate entities** (cover or lock, following each latch's configured status vocabulary) plus an always-pressable **Open button** per gate (the cover/lock control can grey out while the state reads open, and gate status can lag — the button never does), **manual hold-open switches**, a **held-open sensor**, box **connectivity/malfunction** diagnostics, a `nimbio.hold_open_for` service for timed hold opens, and API-usage sensors. |
 
 Gate status arrives **push-first** over Nimbio community webhooks — signed
 deliveries, verified in HA — via either:
