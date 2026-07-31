@@ -54,9 +54,13 @@ data:
   duration: "01:00:00"
 ```
 
-The **manual hold open** switch reflects only the manual toggle; the
-**Held open** sensor is the combined truth (manual OR an active one-time /
-recurring window). Turning the switch off never cancels a scheduled window.
+The **manual hold open** switch mirrors the *indefinite* hold-open state —
+the same thing as the CM portal's "Hold Open Now → Indefinite". A hold
+started from Home Assistant shows on the portal's Hold Opens page (and can
+be ended there with "End Hold Open"), and a portal-started indefinite hold
+shows here and can be ended with the switch. The **Held open** sensor is the
+combined truth (indefinite OR an active one-time / recurring window).
+Turning the switch off never cancels a scheduled window.
 
 ## Notes
 

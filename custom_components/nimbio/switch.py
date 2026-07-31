@@ -1,8 +1,11 @@
-"""Manual hold-open switches.
+"""Manual (indefinite) hold-open switches.
 
-The switch mirrors ONLY the manual hold-open toggle. `held_open` (any source —
-manual, one-time window, recurring schedule) is a separate binary sensor, so
-turning this switch off never silently fights an active scheduled window.
+The switch mirrors the *indefinite* hold-open state — server-side this is the
+CM portal's "Hold Open Now → Indefinite" window, so a hold started here shows
+on the portal's Hold Opens page (endable there with "End Hold Open") and vice
+versa. `held_open` (any source — indefinite, one-time window, recurring
+schedule) is a separate binary sensor, so turning this switch off never
+silently fights an active scheduled window.
 """
 from __future__ import annotations
 
