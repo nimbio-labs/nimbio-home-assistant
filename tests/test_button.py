@@ -59,6 +59,16 @@ async def test_button_naming_primary_vs_secondary(hass: HomeAssistant):
 
 
 @pytest.mark.asyncio
+async def test_button_stays_available_when_latch_reads_offline(hass: HomeAssistant):
+    # The offline flag rides the same laggy status feed the button exists to
+    # distrust — a stale offline reading must not disable the open control.
+    coord = _coordinator(hass)
+    coord.data.latches["sensed"].offline = True
+    buttons = {b._latch_id: b for b in await _buttons(hass, coord)}
+    assert buttons["sensed"].available is True
+
+
+@pytest.mark.asyncio
 async def test_cover_open_control_is_never_disabled(hass: HomeAssistant):
     # assumed_state keeps the frontend from greying out the open arrow while
     # the (possibly lagging) state reads open.

@@ -63,6 +63,17 @@ class NimbioCommunityOpenButton(NimbioLatchEntity, ButtonEntity):
             # name; this one is named "Open".
             self._attr_translation_key = "open_gate"
 
+    @property
+    def available(self) -> bool:
+        # Deliberately skips the base class's `latch.offline` gate: the
+        # offline flag rides the same laggy status feed this button exists
+        # to distrust, and a stale offline reading must not take away the
+        # user's only guaranteed open control. The server still rejects an
+        # open for a truly unreachable box.
+        return (self.coordinator.last_update_success
+                and self.coordinator.data is not None
+                and self._latch_id in self.coordinator.data.latches)
+
     async def async_press(self) -> None:
         await self.coordinator.client.community.open(self._latch_id)
 
