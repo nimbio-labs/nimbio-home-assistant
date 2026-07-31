@@ -11,13 +11,16 @@ Open your Nimbio gates, see live gate status, and control hold opens from
 | **Member key** (create at [api.nimbio.com/manage](https://api.nimbio.com/manage)) | An **open button** for every latch on every key you hold. |
 | **Community manager key** (admin portal → API Access) | Live **gate entities** (cover or lock, following each latch's configured status vocabulary) plus an always-pressable **Open button** per gate (the cover/lock control can grey out while the state reads open, and gate status can lag — the button never does), **manual hold-open switches**, a **held-open sensor**, box **connectivity/malfunction** diagnostics, a `nimbio.hold_open_for` service for timed hold opens, and API-usage sensors. |
 
-Gate status arrives **push-first** over Nimbio community webhooks — signed
-deliveries, verified in HA — via either:
+Gate status arrives **push-first**, by default over Nimbio's **live event
+stream**: Home Assistant opens an outbound SSE connection to the Nimbio API,
+so it works behind NAT with nothing to expose and no Nabu Casa requirement —
+instant updates, zero setup. Alternatives, if you prefer them:
 
-- **Nabu Casa cloudhook** (recommended; nothing to expose), or
+- **Nabu Casa cloudhook** — signed webhook deliveries via your cloud
+  connection, or
 - your own **public https URL**, if your HA is already reachable, or
-- **polling** as a fallback (status reads are quota-exempt on Nimbio's side,
-  so polling doesn't consume your key's monthly quota).
+- **polling** as a last resort (status reads are quota-exempt on Nimbio's
+  side, so polling doesn't consume your key's monthly quota).
 
 A `nimbio_test_...` key exercises the full pipeline without ever moving a
 gate — ideal for trying the integration out.
@@ -40,8 +43,9 @@ restart.
 
 1. Paste your API key (`nimbio_test_...` or `nimbio_live_...`). The
    integration discovers what the key can do via `/v1/me`.
-2. Community keys: pick how updates arrive (cloudhook / external URL /
-   polling). With a push mode the integration **registers its own webhook**
+2. Community keys: pick how updates arrive (live event stream — the default —
+   / cloudhook / external URL / polling). The stream needs no registration at
+   all; with a webhook mode the integration **registers its own webhook**
    through your API key and stores the signing secret — no admin-portal step.
 3. Done. Entities appear per latch.
 

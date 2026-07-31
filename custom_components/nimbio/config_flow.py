@@ -6,8 +6,10 @@ Keys come from two places (linked in the form description):
   (community.nimbio.com -> API Access)
 
 The flow validates the key via GET /v1/me and branches on the key's
-`capabilities` — a community key gets the webhook step (cloudhook / external
-https URL / polling); an account key sets up open buttons only.
+`capabilities` — a community key gets the push-mode step (SSE stream by
+default — zero setup, works behind NAT — with webhook cloudhook / external
+https URL and polling as alternatives); an account key sets up open buttons
+only.
 """
 from __future__ import annotations
 
@@ -38,6 +40,7 @@ from .const import (
     WEBHOOK_MODE_CLOUDHOOK,
     WEBHOOK_MODE_EXTERNAL,
     WEBHOOK_MODE_POLLING,
+    WEBHOOK_MODE_STREAM,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,10 +104,11 @@ class NimbioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_CAPABILITIES: info["capabilities"],
                 }
                 self._key_info = info
-                if info["type"] == "community" and \
-                        CAP_WEBHOOKS in info["capabilities"]:
+                if info["type"] == "community":
+                    # Stream needs no webhook capability, so every community
+                    # key gets the push-mode step.
                     return await self.async_step_webhook_mode()
-                # Account key: polling only (no webhook feed for members yet).
+                # Account key: polling only (no event feed for members yet).
                 self._data[CONF_WEBHOOK_MODE] = WEBHOOK_MODE_POLLING
                 return self._create()
 
@@ -123,11 +127,16 @@ class NimbioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_webhook_mode(self, user_input: dict[str, Any] | None = None):
         errors: dict[str, str] = {}
-        cloud_ok = _cloud_available(self.hass)
-        options = []
-        if cloud_ok:
+        # Stream first — it is the default: zero setup, works behind NAT.
+        # Webhook options only where they can work (cloud subscription /
+        # webhook capability on the key).
+        options = [WEBHOOK_MODE_STREAM]
+        if _cloud_available(self.hass) and \
+                CAP_WEBHOOKS in self._data.get(CONF_CAPABILITIES, []):
             options.append(WEBHOOK_MODE_CLOUDHOOK)
-        options += [WEBHOOK_MODE_EXTERNAL, WEBHOOK_MODE_POLLING]
+        if CAP_WEBHOOKS in self._data.get(CONF_CAPABILITIES, []):
+            options.append(WEBHOOK_MODE_EXTERNAL)
+        options.append(WEBHOOK_MODE_POLLING)
 
         if user_input is not None:
             mode = user_input[CONF_WEBHOOK_MODE]

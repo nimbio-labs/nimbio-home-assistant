@@ -23,6 +23,7 @@ CONF_NIMBIO_WEBHOOK_SECRET = "nimbio_webhook_secret"
 # Options keys.
 OPT_POLL_INTERVAL = "poll_interval"
 
+WEBHOOK_MODE_STREAM = "stream"        # SSE event stream (default; works behind NAT)
 WEBHOOK_MODE_CLOUDHOOK = "cloudhook"
 WEBHOOK_MODE_EXTERNAL = "external"
 WEBHOOK_MODE_POLLING = "polling"
@@ -33,13 +34,18 @@ WEBHOOK_MODE_POLLING = "polling"
 DEFAULT_POLL_SECONDS = 60
 WEBHOOK_SAFETY_POLL_SECONDS = 900
 
-# Events the integration subscribes its webhook to.
+# Events the integration subscribes its webhook to. The SSE stream requests
+# the same set (one event vocabulary — the stream carries webhook payloads).
 WEBHOOK_EVENTS = [
     "sense_line.changed",
     "hold_open.changed",
     "device.online",
     "device.offline",
 ]
+
+# Delay before re-opening the stream after an HTTP-level error (the SDK
+# handles transport-level reconnects itself with its own backoff).
+STREAM_RETRY_SECONDS = 60
 
 # Capability strings from GET /v1/me.
 CAP_OPEN = "open"

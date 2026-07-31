@@ -18,7 +18,7 @@
       },
       "webhook_mode": {
         "title": "Live updates",
-        "description": "How should Nimbio push gate status to Home Assistant?\n\n- **Cloudhook** (recommended): uses your Nabu Casa cloud connection.\n- **External URL**: your Home Assistant is already reachable over public https — enter that base URL.\n- **Polling**: no push; state refreshes on an interval (status reads don't count against your monthly quota).",
+        "description": "How should Nimbio push gate status to Home Assistant?\n\n- **Live event stream** (recommended): Home Assistant connects out to Nimbio over SSE — nothing to expose, works behind NAT, instant updates.\n- **Cloudhook**: webhook delivery via your Nabu Casa cloud connection.\n- **External URL**: webhook delivery to your public https base URL.\n- **Polling**: no push; state refreshes on an interval (status reads don't count against your monthly quota).",
         "data": {
           "webhook_mode": "Update mode",
           "external_url": "Public https base URL (external mode only)"
@@ -49,27 +49,42 @@
   "selector": {
     "webhook_mode": {
       "options": {
-        "cloudhook": "Nabu Casa cloudhook (recommended)",
-        "external": "My Home Assistant has a public https URL",
+        "stream": "Live event stream (recommended — no setup, works behind NAT)",
+        "cloudhook": "Webhook via Nabu Casa cloudhook",
+        "external": "Webhook to my public https URL",
         "polling": "Polling only (no push)"
       }
     }
   },
   "entity": {
     "button": {
-      "open_gate": { "name": "Open" }
+      "open_gate": {
+        "name": "Open"
+      }
     },
     "switch": {
-      "manual_hold_open": { "name": "Manual hold open" }
+      "manual_hold_open": {
+        "name": "Manual hold open"
+      }
     },
     "binary_sensor": {
-      "held_open": { "name": "Held open" },
-      "box_online": { "name": "Box online" },
-      "malfunction": { "name": "Malfunction" }
+      "held_open": {
+        "name": "Held open"
+      },
+      "box_online": {
+        "name": "Box online"
+      },
+      "malfunction": {
+        "name": "Malfunction"
+      }
     },
     "sensor": {
-      "quota_used": { "name": "Monthly API calls used" },
-      "quota_limit": { "name": "Monthly API call quota" }
+      "quota_used": {
+        "name": "Monthly API calls used"
+      },
+      "quota_limit": {
+        "name": "Monthly API call quota"
+      }
     }
   },
   "services": {
@@ -77,9 +92,18 @@
       "name": "Hold open for a duration",
       "description": "Keep a gate held open for a set duration (creates a one-time hold-open window starting now).",
       "fields": {
-        "latch_id": { "name": "Latch ID", "description": "The Nimbio latch to hold open (see the latch_id attribute on the gate entity)." },
-        "duration": { "name": "Duration", "description": "How long to hold the gate open." },
-        "entry_id": { "name": "Config entry", "description": "Optional: restrict to one Nimbio config entry." }
+        "latch_id": {
+          "name": "Latch ID",
+          "description": "The Nimbio latch to hold open (see the latch_id attribute on the gate entity)."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "How long to hold the gate open."
+        },
+        "entry_id": {
+          "name": "Config entry",
+          "description": "Optional: restrict to one Nimbio config entry."
+        }
       }
     }
   }

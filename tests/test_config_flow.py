@@ -86,3 +86,45 @@ async def test_bad_key_shows_error(hass: HomeAssistant):
             result["flow_id"], {CONF_API_KEY: "nope"})
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+@pytest.mark.asyncio
+async def test_stream_is_default_and_creates_stream_entry(hass: HomeAssistant):
+    from custom_components.nimbio.const import WEBHOOK_MODE_STREAM
+
+    with patch("custom_components.nimbio.config_flow._validate_key",
+               return_value=COMMUNITY_INFO):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "nimbio_test_x"})
+    assert result["step_id"] == "webhook_mode"
+    # Stream is the first (default) option in the selector.
+    schema_keys = list(result["data_schema"].schema)
+    mode_key = [k for k in schema_keys if k.schema == CONF_WEBHOOK_MODE][0]
+    assert mode_key.default() == WEBHOOK_MODE_STREAM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_WEBHOOK_MODE: WEBHOOK_MODE_STREAM})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_WEBHOOK_MODE] == WEBHOOK_MODE_STREAM
+
+
+@pytest.mark.asyncio
+async def test_community_key_without_webhook_cap_still_gets_stream(hass: HomeAssistant):
+    from custom_components.nimbio.const import WEBHOOK_MODE_STREAM
+
+    info = {**COMMUNITY_INFO, "api_key_id": "k-nowebhook",
+            "capabilities": ["open", "gate_status"]}
+    with patch("custom_components.nimbio.config_flow._validate_key",
+               return_value=info):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "nimbio_test_x"})
+    # No webhook capability: the step still appears, offering stream/polling.
+    assert result["step_id"] == "webhook_mode"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_WEBHOOK_MODE: WEBHOOK_MODE_STREAM})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_WEBHOOK_MODE] == WEBHOOK_MODE_STREAM

@@ -29,9 +29,11 @@ from .const import (
     OPT_POLL_INTERVAL,
     SERVICE_HOLD_OPEN_FOR,
     WEBHOOK_MODE_POLLING,
+    WEBHOOK_MODE_STREAM,
     WEBHOOK_SAFETY_POLL_SECONDS,
 )
 from .coordinator import NimbioCoordinator
+from .stream import NimbioEventStream
 from .webhook import (
     async_ensure_webhook,
     async_remove_server_webhook,
@@ -58,6 +60,7 @@ class NimbioRuntime:
 
     client: object
     coordinator: NimbioCoordinator
+    stream: NimbioEventStream | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -81,9 +84,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         # Webhook registration first: it can demote the entry to polling
         # (e.g. test-mode key), and the coordinator's poll interval must
-        # reflect the EFFECTIVE mode, not the configured one.
+        # reflect the EFFECTIVE mode, not the configured one. The stream
+        # mode needs no registration — the connection is outbound.
         mode = entry.data.get(CONF_WEBHOOK_MODE, WEBHOOK_MODE_POLLING)
-        if key_type == "community" and mode != WEBHOOK_MODE_POLLING:
+        if key_type == "community" and mode not in (
+                WEBHOOK_MODE_POLLING, WEBHOOK_MODE_STREAM):
             mode = await async_ensure_webhook(hass, entry, client)
 
         if mode == WEBHOOK_MODE_POLLING:
@@ -94,10 +99,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator = NimbioCoordinator(
             hass, client, key_type=key_type, capabilities=capabilities,
             poll_seconds=poll)
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = NimbioRuntime(
-            client=client, coordinator=coordinator)
+        runtime = NimbioRuntime(client=client, coordinator=coordinator)
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime
 
         await coordinator.async_config_entry_first_refresh()
+
+        if key_type == "community" and mode == WEBHOOK_MODE_STREAM:
+            runtime.stream = NimbioEventStream(hass, entry, client, coordinator)
+            runtime.stream.start()
     except (ConfigEntryNotReady, ConfigEntryAuthFailed):
         await _cleanup()
         raise
@@ -121,6 +130,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         runtime: NimbioRuntime | None = hass.data.get(DOMAIN, {}).pop(
             entry.entry_id, None)
         if runtime is not None:
+            if runtime.stream is not None:
+                await runtime.stream.stop()
             await runtime.client.aclose()
     return unload_ok
 
