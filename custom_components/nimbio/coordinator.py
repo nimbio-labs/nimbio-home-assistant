@@ -193,6 +193,8 @@ class NimbioCoordinator(DataUpdateCoordinator[NimbioData]):
         event_type = event.get("event")
         payload = event.get("data") or {}
         latch_id = payload.get("latch_id")
+        _LOGGER.debug("applying %s (latch=%s label=%s payload=%s)",
+                      event_type, latch_id, payload.get("status_label"), payload)
 
         if event_type == "sense_line.changed" and latch_id:
             state = self.data.latches.get(str(latch_id))
