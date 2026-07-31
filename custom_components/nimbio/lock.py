@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, LATCH_CLASS_LOCK, classify_latch
-from .entity import NimbioLatchEntity
+from .entity import NimbioLatchControlEntity
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
     )
 
 
-class NimbioLock(NimbioLatchEntity, LockEntity):
+class NimbioLock(NimbioLatchControlEntity, LockEntity):
     """A door with sensed Locked/Unlocked state. `open` fires the latch —
     there is no remote re-lock (doors relock themselves)."""
 

@@ -31,3 +31,23 @@ class NimbioLatchEntity(CoordinatorEntity[NimbioCoordinator]):
         return (super().available
                 and self._latch_id in self.coordinator.data.latches
                 and not self.latch.offline)
+
+
+class NimbioLatchControlEntity(NimbioLatchEntity):
+    """Base for entities that ACT on a latch (open, hold open).
+
+    Controls deliberately drop the `offline` gate that read-only entities
+    keep. The offline flag rides the same delayed status feed as gate
+    state, so a stale reading would disable every way to open the gate at
+    exactly the moment the user needs it — and an unavailable entity is
+    dead to automations and scripts too, not merely greyed out. Sensors
+    still go unavailable (their data genuinely is stale) and the "Box
+    online" binary sensor remains the honest connectivity signal; the
+    server rejects an open for a truly unreachable box.
+    """
+
+    @property
+    def available(self) -> bool:
+        return (self.coordinator.last_update_success
+                and self.coordinator.data is not None
+                and self._latch_id in self.coordinator.data.latches)

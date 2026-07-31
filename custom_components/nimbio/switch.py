@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import NimbioLatchEntity
+from .entity import NimbioLatchControlEntity
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
     )
 
 
-class NimbioManualHoldOpenSwitch(NimbioLatchEntity, SwitchEntity):
+class NimbioManualHoldOpenSwitch(NimbioLatchControlEntity, SwitchEntity):
     """On = the manual hold open is active for this latch."""
 
     _attr_translation_key = "manual_hold_open"

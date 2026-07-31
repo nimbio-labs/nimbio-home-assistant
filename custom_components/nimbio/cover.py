@@ -17,7 +17,7 @@ from .const import (
     status_is_closed,
     status_is_moving,
 )
-from .entity import NimbioLatchEntity
+from .entity import NimbioLatchControlEntity
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
     async_add_entities(entities)
 
 
-class NimbioGateCover(NimbioLatchEntity, CoverEntity):
+class NimbioGateCover(NimbioLatchControlEntity, CoverEntity):
     """A gate with sensed open/closed state. Opening fires a latch open."""
 
     _attr_device_class = CoverDeviceClass.GATE
@@ -43,7 +43,9 @@ class NimbioGateCover(NimbioLatchEntity, CoverEntity):
     # Never grey out the open control: the frontend disables a cover's open
     # button once the state reads open, but gate status arrives with sensing/
     # webhook lag and gates auto-close on their own — a member must always be
-    # able to fire an open.
+    # able to fire an open. (assumed_state only governs an *available*
+    # entity, which is why this class also inherits the control base's
+    # availability rather than the offline-gated one.)
     _attr_assumed_state = True
 
     def __init__(self, coordinator, latch_id: str) -> None:

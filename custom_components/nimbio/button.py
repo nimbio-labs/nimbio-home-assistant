@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LATCH_CLASS_BUTTON, classify_latch
 from .coordinator import NimbioCoordinator
-from .entity import NimbioLatchEntity
+from .entity import NimbioLatchControlEntity
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
     async_add_entities(entities)
 
 
-class NimbioCommunityOpenButton(NimbioLatchEntity, ButtonEntity):
+class NimbioCommunityOpenButton(NimbioLatchControlEntity, ButtonEntity):
     """Open a community latch — always pressable regardless of gate state."""
 
     def __init__(self, coordinator, latch_id: str, primary: bool = True) -> None:
@@ -63,19 +63,12 @@ class NimbioCommunityOpenButton(NimbioLatchEntity, ButtonEntity):
             # name; this one is named "Open".
             self._attr_translation_key = "open_gate"
 
-    @property
-    def available(self) -> bool:
-        # Deliberately skips the base class's `latch.offline` gate: the
-        # offline flag rides the same laggy status feed this button exists
-        # to distrust, and a stale offline reading must not take away the
-        # user's only guaranteed open control. The server still rejects an
-        # open for a truly unreachable box.
-        return (self.coordinator.last_update_success
-                and self.coordinator.data is not None
-                and self._latch_id in self.coordinator.data.latches)
-
     async def async_press(self) -> None:
         await self.coordinator.client.community.open(self._latch_id)
+        # Same refresh the cover/lock controls do — without it the gate
+        # entity on this device keeps reporting its pre-open state until a
+        # webhook lands or the poll interval elapses.
+        await self.coordinator.async_request_refresh()
 
 
 class NimbioAccountOpenButton(CoordinatorEntity[NimbioCoordinator], ButtonEntity):
