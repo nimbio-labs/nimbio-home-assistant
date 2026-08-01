@@ -36,6 +36,12 @@ class NimbioLock(NimbioLatchControlEntity, LockEntity):
 
     @property
     def is_locked(self) -> bool | None:
+        # Offline = frozen feed; report unknown rather than a stale state.
+        # The entity stays available so `open` still works (see
+        # NimbioLatchControlEntity), but it must not claim a lock state it
+        # can no longer observe.
+        if self.latch.offline:
+            return None
         status = (self.latch.status or "").strip().lower()
         if status == "locked":
             return True
