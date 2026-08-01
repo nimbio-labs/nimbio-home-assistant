@@ -33,7 +33,7 @@ Feature availability within a community key is driven by the `capabilities` arra
 | `entity.py` | `NimbioLatchEntity` (read-only) and `NimbioLatchControlEntity` (acts on a latch) — the two availability rules. |
 | `const.py` | Constants **and pure helpers** (`classify_latch`, `status_is_*`). Deliberately has **no Home Assistant imports** so the logic is unit-testable standalone — keep it that way. |
 | `binary_sensor.py`, `button.py`, `cover.py`, `lock.py`, `sensor.py`, `switch.py` | The six platforms in `PLATFORMS`. |
-| `brand/` | Icon/logo shipped in-repo (HA 2026.3+ local brand images), so the integration is branded without a home-assistant/brands PR. |
+| `brand` (directory) | Icon/logo shipped in-repo (HA 2026.3+ local brand images), so the integration is branded without a home-assistant/brands PR. |
 
 ### Invariants worth knowing before you change things
 
