@@ -3,3 +3,15 @@ __pycache__/
 .venv/
 .pytest_cache/
 .coverage
+
+# Secrets — never commit a real API key
+.env
+
+# Claude Code: track .claude/settings.json so shared config reaches git worktrees
+# (an untracked .claude/ is absent from a worktree checkout, taking the skills with it).
+# Everything below is per-machine or per-session state and must stay local.
+.claude/settings.local.json
+.claude/plans/
+.claude/memory/
+.claude/worktrees/
+.claude/*.lock
