@@ -44,6 +44,11 @@ class NimbioLatchControlEntity(NimbioLatchEntity):
     still go unavailable (their data genuinely is stale) and the "Box
     online" binary sensor remains the honest connectivity signal; the
     server rejects an open for a truly unreachable box.
+
+    Controls that ALSO carry sensed state (cover, lock) must not exploit
+    this to keep reporting that state: staying available is about the
+    control remaining usable, not about the reading still being true. Those
+    classes return None (unknown) for their state while offline.
     """
 
     @property

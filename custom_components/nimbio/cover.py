@@ -54,12 +54,19 @@ class NimbioGateCover(NimbioLatchControlEntity, CoverEntity):
 
     @property
     def is_closed(self) -> bool | None:
+        # Offline = the status feed is frozen, so report unknown rather than
+        # the last value. The entity stays AVAILABLE (its open control must
+        # keep working), but it must not assert a position it can no longer
+        # observe — an automation reading a stale "closed" is worse than one
+        # reading unknown.
+        if self.latch.offline:
+            return None
         return status_is_closed(self.latch.status)
 
     @property
     def is_opening(self) -> bool:
         # The sense line reports a single Moving state without direction.
-        return status_is_moving(self.latch.status)
+        return not self.latch.offline and status_is_moving(self.latch.status)
 
     @property
     def extra_state_attributes(self):

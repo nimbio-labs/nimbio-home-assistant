@@ -72,7 +72,12 @@ async def test_controls_stay_available_when_latch_reads_offline(hass: HomeAssist
     coord.data.latches["sensed"].offline = True
     buttons = {b._latch_id: b for b in await _buttons(hass, coord)}
     assert buttons["sensed"].available is True
-    assert NimbioGateCover(coord, "sensed").available is True
+    cover = NimbioGateCover(coord, "sensed")
+    assert cover.available is True
+    # ...but a control that also carries sensed state must report unknown
+    # rather than the frozen last reading.
+    assert cover.is_closed is None
+    assert cover.is_opening is False
 
 
 @pytest.mark.asyncio
