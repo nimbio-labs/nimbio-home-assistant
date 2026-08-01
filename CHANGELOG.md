@@ -8,6 +8,8 @@ installations.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-01
+
 ### Fixed
 - A gate that reads offline now reports **unknown** state instead of its last
   known reading. The cover's `is_closed` / `is_opening` and the lock's
