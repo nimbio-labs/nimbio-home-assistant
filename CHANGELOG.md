@@ -8,6 +8,8 @@ installations.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-08-01
+
 ### Security
 - The push-event debug log no longer dumps the raw event payload. It logs
   named fields (`status_label`, `transient`, `held_open`, `manual`) plus the
