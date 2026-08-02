@@ -15,6 +15,7 @@ from custom_components.nimbio.coordinator import (
     NimbioData,
 )
 from custom_components.nimbio.cover import NimbioGateCover
+from custom_components.nimbio.entity import NimbioLatchEntity
 
 
 def _coordinator(hass: HomeAssistant) -> NimbioCoordinator:
@@ -78,6 +79,9 @@ async def test_controls_stay_available_when_latch_reads_offline(hass: HomeAssist
     # rather than the frozen last reading.
     assert cover.is_closed is None
     assert cover.is_opening is False
+    # The raw status attribute is the same assertion by another route — a
+    # template reading it must not get the frozen value back.
+    assert cover.extra_state_attributes["nimbio_status"] is None
 
 
 @pytest.mark.asyncio
@@ -100,3 +104,16 @@ async def test_cover_open_control_is_never_disabled(hass: HomeAssistant):
     # the (possibly lagging) state reads open.
     cover = NimbioGateCover(_coordinator(hass), "sensed")
     assert cover.assumed_state is True
+
+
+@pytest.mark.asyncio
+async def test_availability_survives_data_going_none(hass: HomeAssistant):
+    # Both bases answer availability from coordinator.data, so neither may
+    # assume it exists — an entity that raises from `available` breaks the
+    # whole state write, not just its own.
+    coord = _coordinator(hass)
+    control = NimbioGateCover(coord, "sensed")
+    readonly = NimbioLatchEntity(coord, "sensed")
+    coord.data = None
+    assert control.available is False
+    assert readonly.available is False

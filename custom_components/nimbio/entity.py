@@ -29,6 +29,7 @@ class NimbioLatchEntity(CoordinatorEntity[NimbioCoordinator]):
     @property
     def available(self) -> bool:
         return (super().available
+                and self.coordinator.data is not None
                 and self._latch_id in self.coordinator.data.latches
                 and not self.latch.offline)
 
@@ -48,7 +49,9 @@ class NimbioLatchControlEntity(NimbioLatchEntity):
     Controls that ALSO carry sensed state (cover, lock) must not exploit
     this to keep reporting that state: staying available is about the
     control remaining usable, not about the reading still being true. Those
-    classes return None (unknown) for their state while offline.
+    classes return None (unknown) for their state while offline, and blank
+    the raw status they expose as an attribute — gating one without the
+    other leaves the stale value reachable from a template.
     """
 
     @property

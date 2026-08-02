@@ -51,7 +51,8 @@ class NimbioLock(NimbioLatchControlEntity, LockEntity):
 
     @property
     def extra_state_attributes(self):
-        return {"nimbio_status": self.latch.status,
+        # Blanked while offline to match is_locked — see NimbioGateCover.
+        return {"nimbio_status": None if self.latch.offline else self.latch.status,
                 "latch_id": self._latch_id}
 
     async def async_open(self, **kwargs) -> None:

@@ -198,11 +198,11 @@ class NimbioCoordinator(DataUpdateCoordinator[NimbioData]):
 
         if event_type == "sense_line.changed" and latch_id:
             state = self.data.latches.get(str(latch_id))
-            if state is not None and not payload.get("transient"):
-                state.status = payload.get("status_label") or state.status
-                self.async_set_updated_data(self.data)
-            elif state is not None:
-                # Transient states (e.g. Moving) still render live.
+            if state is not None:
+                # Transient states (e.g. Moving) are applied like any other:
+                # they are exactly what the user wants rendered live, and the
+                # next event carries the settled status. This deliberately
+                # does not branch on payload["transient"].
                 state.status = payload.get("status_label") or state.status
                 self.async_set_updated_data(self.data)
         elif event_type == "hold_open.changed" and latch_id:

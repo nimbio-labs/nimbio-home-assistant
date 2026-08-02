@@ -48,6 +48,19 @@ async def test_hold_open_changed_patches_flags(hass: HomeAssistant):
 
 
 @pytest.mark.asyncio
+async def test_transient_sense_line_events_are_applied_too(hass: HomeAssistant):
+    # Moving arrives flagged transient. It is still what the user wants
+    # rendered live, and the settled status follows in the next event —
+    # apply_webhook_event deliberately does not branch on the flag.
+    coord = _coordinator(hass)
+    coord.apply_webhook_event({
+        "event": "sense_line.changed",
+        "data": {"latch_id": "l1", "status_label": "Moving", "transient": True},
+    })
+    assert coord.data.latches["l1"].status == "Moving"
+
+
+@pytest.mark.asyncio
 async def test_unknown_latch_is_ignored(hass: HomeAssistant):
     coord = _coordinator(hass)
     coord.apply_webhook_event({
