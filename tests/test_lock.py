@@ -1,6 +1,7 @@
 """Locks are the other control that carries sensed state, so they share the
 cover's hazard: the status feed can freeze while the entity stays usable."""
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 from homeassistant.core import HomeAssistant
@@ -70,6 +71,9 @@ async def test_offline_reports_unknown_but_stays_available(hass: HomeAssistant):
     lock = NimbioLock(coord, "door")
     assert lock.available is True
     assert lock.is_locked is None
+    # The attribute is the other way to read that state — blank it too, or
+    # the unknown state is cosmetic and a template still sees "Locked".
+    assert lock.extra_state_attributes["nimbio_status"] is None
 
 
 @pytest.mark.asyncio
@@ -79,3 +83,16 @@ async def test_lock_is_not_remotely_lockable(hass: HomeAssistant):
     lock = NimbioLock(_coordinator(hass), "door")
     with pytest.raises(NotImplementedError):
         await lock.async_lock()
+
+
+@pytest.mark.asyncio
+async def test_unlock_fires_an_open(hass: HomeAssistant):
+    # HA's lock card calls unlock, not open. It must reach the same latch
+    # open as LockEntityFeature.OPEN rather than silently doing nothing.
+    coord = _coordinator(hass)
+    coord.client = SimpleNamespace(community=SimpleNamespace(open=AsyncMock()))
+    coord.async_request_refresh = AsyncMock()
+    lock = NimbioLock(coord, "door")
+    await lock.async_unlock()
+    coord.client.community.open.assert_awaited_once_with("door")
+    coord.async_request_refresh.assert_awaited_once()

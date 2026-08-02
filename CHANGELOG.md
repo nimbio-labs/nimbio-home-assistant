@@ -8,6 +8,27 @@ installations.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-01
+
+### Fixed
+- The `nimbio_status` attribute on gate covers and locks is now blank while
+  the box is offline. 0.2.1 stopped the *state* from asserting a frozen
+  reading, but the attribute kept exposing it, so a template using
+  `state_attr(..., 'nimbio_status')` still saw a stale "Closed"/"Locked" —
+  the exact value 0.2.1 set out to stop reporting.
+- Read-only entities no longer raise from `available` if the coordinator has
+  no data yet. The control base already guarded this; the read-only base did
+  not, and an entity that raises from `available` breaks the state write for
+  more than itself. Not reachable from the shipped setup path — platforms
+  build no entities before the first refresh — so this is a latent fix.
+
+### Changed
+- `apply_webhook_event` no longer branches on a sense-line event's
+  `transient` flag: both branches were identical, so the test decided
+  nothing. Transient states (e.g. Moving) are applied like any other, which
+  is what was already happening. Behavior is unchanged; the dead branch and
+  the ambiguity about which path was intended are gone.
+
 ## [0.2.1] - 2026-08-01
 
 ### Fixed

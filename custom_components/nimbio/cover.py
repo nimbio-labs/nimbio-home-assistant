@@ -70,7 +70,10 @@ class NimbioGateCover(NimbioLatchControlEntity, CoverEntity):
 
     @property
     def extra_state_attributes(self):
-        return {"nimbio_status": self.latch.status,
+        # Blank the raw status while offline for the same reason is_closed
+        # returns None: a template reading state_attr(..., 'nimbio_status')
+        # would otherwise still see the frozen reading and defeat the point.
+        return {"nimbio_status": None if self.latch.offline else self.latch.status,
                 "latch_id": self._latch_id}
 
     async def async_open_cover(self, **kwargs) -> None:
