@@ -8,6 +8,17 @@ installations.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-08-01
+
+### Security
+- The push-event debug log no longer dumps the raw event payload. It logs
+  named fields (`status_label`, `transient`, `held_open`, `manual`) plus the
+  list of keys present, so the diagnostic value is unchanged while the values
+  of any field the API adds later stay out of the log. `data` is
+  server-controlled, and Home Assistant users routinely paste debug logs into
+  public issue reports — an unbounded passthrough is the wrong default there,
+  even though nothing sensitive is carried today.
+
 ## [0.2.2] - 2026-08-01
 
 ### Fixed

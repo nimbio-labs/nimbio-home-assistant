@@ -1,4 +1,5 @@
 """Coordinator webhook-patching + refresh-resilience behavior."""
+import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -45,6 +46,32 @@ async def test_hold_open_changed_patches_flags(hass: HomeAssistant):
     })
     assert coord.data.latches["l1"].held_open is True
     assert coord.data.latches["l1"].manual_hold_open is True
+
+
+@pytest.mark.asyncio
+async def test_event_logging_names_fields_and_never_dumps_the_payload(
+        hass: HomeAssistant, caplog):
+    # `data` is server-controlled. If a future API version adds a sensitive
+    # field, it must not ride into a debug log that users paste into public
+    # issue reports — so the handler logs named fields plus the key list,
+    # never the dict. The unexpected field's NAME may appear (that is the
+    # diagnostic signal); its VALUE may not.
+    coord = _coordinator(hass)
+    with caplog.at_level(logging.DEBUG,
+                         logger="custom_components.nimbio.coordinator"):
+        coord.apply_webhook_event({
+            "event": "sense_line.changed",
+            "data": {"latch_id": "l1", "status_label": "Open",
+                     "resident_phone": "+15551234567",
+                     "access_code": "hunter2"},
+        })
+    logged = caplog.text
+    assert "+15551234567" not in logged
+    assert "hunter2" not in logged
+    # Still diagnosable: the event, the latch, the status and the field names.
+    assert "sense_line.changed" in logged
+    assert "l1" in logged and "Open" in logged
+    assert "access_code" in logged
 
 
 @pytest.mark.asyncio

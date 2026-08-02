@@ -193,8 +193,19 @@ class NimbioCoordinator(DataUpdateCoordinator[NimbioData]):
         event_type = event.get("event")
         payload = event.get("data") or {}
         latch_id = payload.get("latch_id")
-        _LOGGER.debug("applying %s (latch=%s label=%s payload=%s)",
-                      event_type, latch_id, payload.get("status_label"), payload)
+        # Log named fields, never the payload dict itself. `data` is
+        # server-controlled and grows over time; dumping it verbatim means any
+        # field the API adds later — a name, a phone, an access code — lands in
+        # debug logs, which users routinely paste into public issue reports.
+        # The key list keeps the "what did the server actually send" signal
+        # without carrying the values along with it.
+        _LOGGER.debug(
+            "applying %s (latch=%s label=%s transient=%s held_open=%s "
+            "manual=%s fields=%s)",
+            event_type, latch_id, payload.get("status_label"),
+            payload.get("transient"), payload.get("held_open"),
+            payload.get("manual"), sorted(payload),
+        )
 
         if event_type == "sense_line.changed" and latch_id:
             state = self.data.latches.get(str(latch_id))
